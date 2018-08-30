@@ -1,286 +1,198 @@
 package a2018_hackathon.navigation;
 
+import android.util.Log;
+
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.Map;
 
 public class Navigation {
+    //위도 경도
+    double user_latitude;
+    double user_longitude;
 
-    //디폴트 값
-    private static int DEFAULT_HV_COST = 10; // Horizontal - Vertical Cost
-    private static int DEFAULT_DIAGONAL_COST = 14;
+    AStar museum;
 
-    private int hvCost;
-    private int diagonalCost;
 
-    //지도의 층
-    private int floor;
+    Node initialNode;
+    Node finalNode;
 
-    //지도 노드 배열
-    private Node[][] searchArea;
+    List<Node> path;
 
-    //열린 목록, 닫힌 목록 리스트
-    private PriorityQueue<Node> openList;
-    private List<Node> closedList;
+    public ArrayList navi_text_List;
 
-    //초기노드와 목적노드
-    private Node initialNode;
-    private Node finalNode;
+    public Navigation() {
 
-    //생성자 함수
-    public Navigation(int rows, int cols,int hvCost, int diagonalCost,int floor) {
-        this.hvCost = hvCost;
-        this.diagonalCost = diagonalCost;
+        initialNode = new Node(0,0);
+        finalNode = new Node(6,6);
 
-        //지도 설정하기
-        this.searchArea = new Node[rows][cols];
+        path = null;
 
-        //노드 정보 초기화
-        for(int row = 0; row <searchArea.length; row++){
-            for(int col = 0; col < searchArea[row].length; col++){
-                searchArea[row][col].setInforamtion(-1);
-            }
-        }
+        navi_text_List = new ArrayList();
 
-        //층 수 삽입
-        this.floor =floor;
+        museum = new AStar(7,7,initialNode,finalNode);
+        museum.setInformations(MapInfo.museum);
 
-        //열린 목록을 우선순위큐 리스트로 만듦
-        this.openList = new PriorityQueue<Node>(new Comparator<Node>() {
-            @Override
-            public int compare(Node node0, Node node1) {
-                return node0.getF() < node1.getF() ? -1 : node0.getF() > node1.getF() ? 1 : 0;
-            }
-        });
-
-        setNodes();
-
-        this.closedList = new ArrayList<Node>();
     }
 
-    //생성사 오버로딩
-    public Navigation(int rows, int cols, int floor) {
-        this(rows, cols, DEFAULT_HV_COST, DEFAULT_DIAGONAL_COST,floor);
-    }
-
-    //노드로 지도 그리기
-    public void setNodes() {
-        for (int i = 0; i < searchArea.length; i++) {
-            for (int j = 0; j < searchArea[0].length; j++) {
-                Node node = new Node(i, j);
-                node.calculateHeuristic(getFinalNode());
-                this.searchArea[i][j] = node;
-                this.searchArea[i][j].setFloor(floor);
-            }
-        }
-    }
-
-    //지도에 있는 정보
-    public void setInformations(int[][] infoArray){
-        for(int row=0; row < infoArray.length; row++){
-            for(int col = 0 ; col < infoArray[row].length; col++){
-                setInformations(row,col,infoArray[row][col]);
-            }
-        }
-    }
-
-    //경로찾는 함수
-    public List<Node> findPath() {
-        //처음 노드 열린목록에 넣기
-        openList.add(initialNode);
-
-        //열린목록이 빌때까지
-        while (!isEmpty(openList)) {
-            //열린목록에서 확인하는 노드를 닫힌 목록에 넣기
-            Node currentNode = openList.poll();
-            closedList.add(currentNode);
-
-            //현재노드가 목적노드라면
-            if (isFinalNode(currentNode)) {
-                return getPath(currentNode);
-            } else {        //현재노드가 목적노드가 아니라면
-                addAdjacentNodes(currentNode);
-            }
-        }
-
-        return new ArrayList<Node>();
-    }
-
-    //현재 노드까지의 경로 얻는 함수
-    private List<Node> getPath(Node currentNode) {
-        List<Node> path = new ArrayList<Node>();
-        path.add(currentNode);
-        Node parent;
-        //현재 노드의 부모가 NULL 일때까지
-        while ((parent = currentNode.getParent()) != null) {
-            path.add(0, parent);
-            currentNode = parent;
-        }
-        return path;
-    }
-
-    //인접한 노드 추가하는 함수
-    private void addAdjacentNodes(Node currentNode) {
-        //위의 행 노드 추가하기
-        addAdjacentUpperRow(currentNode);
-        //중간의 행 노드 추가하기
-        addAdjacentMiddleRow(currentNode);
-        //밑에 있는 행 노드 추가하기
-        addAdjacentLowerRow(currentNode);
-    }
-
-    //밑에 있는 행 노드 추가하는 함수
-    private void addAdjacentLowerRow(Node currentNode) {
-        int row = currentNode.getRow();
-        int col = currentNode.getCol();
-        int lowerRow = row + 1;     //현재노드보다 밑에 있는 행
-
-        //현재노드보다 밑에 있는 행이 맵 내에 있다면
-        if (lowerRow < getSearchArea().length) {
-            //현재노드의 열보다 왼쪽에 있는 열이 0이상 (즉, 맵안에있다면)
-            if (col - 1 >= 0) {
-                checkNode(currentNode, col - 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
-            }
-            //현재노드의 열보다 오른쪽에 있는 열이 맵 내에 있다면
-            if (col + 1 < getSearchArea()[0].length) {
-                checkNode(currentNode, col + 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
-            }
-            //현재노드에 바로 밑에 있는 노드 확인함
-            checkNode(currentNode, col, lowerRow, getHvCost());
-        }
-    }
-
-    //중앙에 있는 행 노드 추가하는 함수
-    private void addAdjacentMiddleRow(Node currentNode) {
-        int row = currentNode.getRow();
-        int col = currentNode.getCol();
-        int middleRow = row;
-        if (col - 1 >= 0) {
-            checkNode(currentNode, col - 1, middleRow, getHvCost());
-        }
-        if (col + 1 < getSearchArea()[0].length) {
-            checkNode(currentNode, col + 1, middleRow, getHvCost());
-        }
-    }
-
-    //위에 있는 행 노드 추가하는 함수
-    private void addAdjacentUpperRow(Node currentNode) {
-        int row = currentNode.getRow();
-        int col = currentNode.getCol();
-        int upperRow = row - 1;
-        if (upperRow >= 0) {
-            if (col - 1 >= 0) {
-                checkNode(currentNode, col - 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
-            }
-            if (col + 1 < getSearchArea()[0].length) {
-                checkNode(currentNode, col + 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
-            }
-            checkNode(currentNode, col, upperRow, getHvCost());
-        }
-    }
-
-    //노드 체크하는 함수
-    private void checkNode(Node currentNode, int col, int row, int cost) {
-        Node adjacentNode = getSearchArea()[row][col];
-        if (!adjacentNode.IsBlock() && !getClosedList().contains(adjacentNode)) {
-            if (!getOpenList().contains(adjacentNode)) {
-                adjacentNode.setNodeData(currentNode, cost);
-                getOpenList().add(adjacentNode);
-            } else {
-                boolean changed = adjacentNode.checkBetterPath(currentNode, cost);
-                if (changed) {
-                    // Remove and Add the changed node, so that the PriorityQueue can sort again its
-                    // contents with the modified "finalCost" value of the modified node
-                    getOpenList().remove(adjacentNode);
-                    getOpenList().add(adjacentNode);
+    //노드가 가는 경로가 잘 가고 있는지 체크하기
+    public boolean user_CheckPosition(List<Node> path,int user_row,int user_col){
+        boolean check_Position = false;
+        for(Node node : path) {
+            if (node.getRow() - 1 >= 0 &&
+                    node.getCol() - 1 >= 0 &&
+                    node.getRow() + 1 <= MapInfo.map_rows &&
+                    node.getCol() + 1 <= MapInfo.map_cols) {
+                if (node.getRow() - 1 <= user_row ||
+                        user_row <= node.getRow() + 1 ||
+                        node.getCol() - 1 <= user_col ||
+                        user_col <= node.getCol() + 1) {
+                    check_Position = true;
                 }
             }
         }
-    }
-
-    //이동수단에 대한 F값 계산하기
-    public int calculate_F(Node initialNode,Node finalNode){
-        set_Initail_Final_Node(initialNode,finalNode);
-        int check = 0;
-        List<Node> temp = findPath();
-        for(Node node : temp){
-            check += node.getF();
+        if(check_Position){
+            return true;
         }
-        return check;
+        else{
+            return false;
+        }
     }
 
-    protected void set_Initail_Final_Node(Node initialNode,Node finalNode){
-        setInitialNode(initialNode);
-        setFinalNode(finalNode);
+    //최소의 F값 찾기
+    public  int compare_Minimum(int[] means_transportation){
+        int find_Minimum = means_transportation[0];
+        for(int i=1;i<means_transportation.length;i++){
+            if(find_Minimum >= means_transportation[i]){
+                find_Minimum = means_transportation[i];
+            }
+        }
+
+        int find_component;
+
+        for(find_component=0;find_component<means_transportation.length;find_component++){
+            if(find_Minimum == means_transportation[find_component])
+                break;
+        }
+
+        return find_component;
     }
 
-    private boolean isFinalNode(Node currentNode) {
-        return currentNode.equals(finalNode);
+    public Node get_currentNode(double user_latitude,double user_longitude){
+        Node current_Node = null;
+        user_latitude -= 37.54715706;
+        user_longitude -= 127.07383858;
+
+        double b = 93806;
+        double a = 158983;
+        double c = 184595;
+
+        user_latitude = a / c * user_latitude + b / c * user_longitude;
+        user_longitude = -b / c * user_latitude + a / c * user_longitude;
+
+        int count_row = Integer.parseInt (String.valueOf(user_latitude / 0.00001999));
+        int count_col = Integer.parseInt(String.valueOf(user_longitude / 0.00002148));
+
+
+        current_Node = new Node(count_row,count_col);
+
+        if(count_row < 0 || count_col <0){
+            return null;
+        }
+        else{
+            return current_Node;
+        }
+    }
+    //목적지에 대한 노드 얻기
+
+    public String get_Device_bearing(double bearing){
+        if(bearing >= MapInfo.up_bearing -45 && bearing <= MapInfo.up_bearing + 45){
+            return "앞";
+        }
+        else if(bearing >= MapInfo.left_bearing -45 && bearing <= MapInfo.left_bearing +45){
+            return "왼쪽";
+        }
+        else if(bearing >= MapInfo.down_bearing -45 && bearing <= MapInfo.down_bearing +45){
+            return "아래쪽";
+        }
+        else{
+            return "오른쪽";
+        }
     }
 
-    private boolean isEmpty(PriorityQueue<Node> openList) {
-        return openList.size() == 0;
+    public void Navi_Path(){
+        int i=0;
+
+        for(i=0;i<path.size()-1; i++){
+            int change_row = 0;
+            int change_col = 0;
+
+            String navi_text = "";
+
+            change_row = path.get(i+1).getRow() - path.get(i).getRow();
+            change_col = path.get(i+1).getCol() - path.get(i).getCol();
+
+            if(change_row == 1 && change_col ==0){
+                navi_text= "왼쪽";
+            }
+            else if(change_row == -1 && change_col ==0){
+                navi_text= "오른쪽";
+            }
+            else if(change_row == 0 && change_col == 1){
+                navi_text= "아래쪽";
+            }
+            else if(change_row == 0 && change_col == -1){
+                navi_text= "위쪽";
+            }
+            else if(change_row == 1 && change_col ==1){
+                navi_text= "왼쪽아래";
+            }
+            else if(change_row == 1 && change_col ==-1){
+                navi_text= "왼쪽위";
+            }
+            else if(change_row ==-1 && change_col ==1){
+                navi_text= "오른쪽아래";
+            }
+            else if(change_row ==-1 && change_col ==-1){
+                navi_text= "오른쪽위";
+            }
+            else{
+                navi_text = "이동수단";
+            }
+
+            navi_text_List.add(navi_text);
+        }
+
     }
 
-    //노드 정보 설정
-    private void setInformations(int row,int col,int information) {
-        this.searchArea[row][col].setInforamtion(information);
-    }
+    public void outPut_Navi(){
+        String current_text =(String)navi_text_List.get(0);
 
-    public Node getInitialNode() {
-        return initialNode;
-    }
+        if(current_text.equals("이동수단")){
+            Log.e("이동수단","2000 계단 남음");
+            navi_text_List.remove(0);
+            return ;
+        }
 
-    public void setInitialNode(Node initialNode) {
-        this.initialNode = initialNode;
-    }
+        int count = 1 ;
 
-    public Node getFinalNode() {
-        return finalNode;
-    }
+        int i=1;
+        while((String)navi_text_List.get(i)== current_text){
+            i++;
+            count++;
+        }
 
-    public void setFinalNode(Node finalNode) {
-        this.finalNode = finalNode;
-    }
+        Log.e("i의 값",String.valueOf(i));
 
-    public Node[][] getSearchArea() {
-        return searchArea;
-    }
+        for(int j=0;j<i;j++){
+            navi_text_List.remove(0);
+        }
 
-    public void setSearchArea(Node[][] searchArea) {
-        this.searchArea = searchArea;
-    }
+        Log.e(" 방향",current_text);
+        Log.e("거리",String.valueOf(count*MapInfo.node_space)+"m");
 
-    public PriorityQueue<Node> getOpenList() {
-        return openList;
-    }
+        String announcement;
 
-    public void setOpenList(PriorityQueue<Node> openList) {
-        this.openList = openList;
-    }
-
-    public List<Node> getClosedList() {
-        return closedList;
-    }
-
-    public void setClosedList(List<Node> closedList) {
-        this.closedList = closedList;
-    }
-
-    public int getHvCost() {
-        return hvCost;
-    }
-
-    public void setHvCost(int hvCost) {
-        this.hvCost = hvCost;
-    }
-
-    private int getDiagonalCost() {
-        return diagonalCost;
-    }
-
-    private void setDiagonalCost(int diagonalCost) {
-        this.diagonalCost = diagonalCost;
+        Log.e("sound", "Aaa");
     }
 }
