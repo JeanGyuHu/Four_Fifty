@@ -11,6 +11,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Navigation navigation = new Navigation();
+        navigation.outPut_Navi();
         setContentView(R.layout.activity_main);
     }
 }

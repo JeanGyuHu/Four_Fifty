@@ -26,13 +26,15 @@ public class Navigation {
         initialNode = new Node(0,0);
         finalNode = new Node(6,6);
 
-        path = null;
-
         navi_text_List = new ArrayList();
 
         museum = new AStar(7,7,initialNode,finalNode);
         museum.setInformations(MapInfo.museum);
 
+        path = museum.findPath();
+        for(Node node : path){
+            Log.e("노드",node.toString());
+        }
     }
 
     //노드가 가는 경로가 잘 가고 있는지 체크하기
@@ -133,39 +135,42 @@ public class Navigation {
             change_col = path.get(i+1).getCol() - path.get(i).getCol();
 
             if(change_row == 1 && change_col ==0){
-                navi_text= "왼쪽";
-            }
-            else if(change_row == -1 && change_col ==0){
-                navi_text= "오른쪽";
-            }
-            else if(change_row == 0 && change_col == 1){
                 navi_text= "아래쪽";
             }
-            else if(change_row == 0 && change_col == -1){
+            else if(change_row == -1 && change_col ==0){
                 navi_text= "위쪽";
             }
+            else if(change_row == 0 && change_col == 1){
+                navi_text= "오른쪽";
+            }
+            else if(change_row == 0 && change_col == -1){
+                navi_text= "왼쪽";
+            }
             else if(change_row == 1 && change_col ==1){
-                navi_text= "왼쪽아래";
-            }
-            else if(change_row == 1 && change_col ==-1){
-                navi_text= "왼쪽위";
-            }
-            else if(change_row ==-1 && change_col ==1){
                 navi_text= "오른쪽아래";
             }
-            else if(change_row ==-1 && change_col ==-1){
+            else if(change_row == 1 && change_col ==-1){
+                navi_text= "왼쪽아래";
+            }
+            else if(change_row ==-1 && change_col ==1){
                 navi_text= "오른쪽위";
+            }
+            else if(change_row ==-1 && change_col ==-1){
+                navi_text= "왼쪽위";
             }
             else{
                 navi_text = "이동수단";
             }
 
-            navi_text_List.add(navi_text);
-        }
 
+            navi_text_List.add(navi_text);
+            Log.e("냥","");
+            Log.e("숭구리당당",navi_text);
+        }
     }
 
     public void outPut_Navi(){
+        Navi_Path();
         String current_text =(String)navi_text_List.get(0);
 
         if(current_text.equals("이동수단")){
@@ -182,17 +187,12 @@ public class Navigation {
             count++;
         }
 
-        Log.e("i의 값",String.valueOf(i));
-
         for(int j=0;j<i;j++){
             navi_text_List.remove(0);
         }
 
-        Log.e(" 방향",current_text);
-        Log.e("거리",String.valueOf(count*MapInfo.node_space)+"m");
+        Log.e("방향",current_text);
+        Log.e("거리",String.valueOf(count*MapInfo.node_space+"m"));
 
-        String announcement;
-
-        Log.e("sound", "Aaa");
     }
 }
