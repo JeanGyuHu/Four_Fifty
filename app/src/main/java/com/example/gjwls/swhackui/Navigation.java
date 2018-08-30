@@ -1,4 +1,4 @@
-package a2018_hackathon.navigation;
+package com.example.gjwls.swhackui;
 
 import android.util.Log;
 
@@ -21,20 +21,50 @@ public class Navigation {
 
     public ArrayList navi_text_List;
 
-    public Navigation() {
+    int[] check_work;
 
-        initialNode = new Node(0,0);
+    List<Node> work;
+    public Navigation() {
+        initialNode = new Node(6,0);
         finalNode = new Node(6,6);
 
         navi_text_List = new ArrayList();
-
-        museum = new AStar(7,7,initialNode,finalNode);
+        work = null;
+        museum = new AStar(MapInfo.map_rows,MapInfo.map_cols,initialNode,finalNode);
         museum.setInformations(MapInfo.museum);
 
+        Extract_Work extract_work = new Extract_Work();
+        work = extract_work.find_Work();
+
+        //확인용으로 해놓은 path
         path = museum.findPath();
-        for(Node node : path){
-            Log.e("노드",node.toString());
+    }
+
+    //가까운 작품
+    public void compare_close_Work(){
+        check_work = new int[work.size()];
+
+        for(int i=0;i<check_work.length;i++){
+            check_work[i] = museum.calculate_F(initialNode,work.get(i));
+            Log.e(String.valueOf(i),String.valueOf(check_work[i]));
         }
+
+        int component = compare_Minimum(check_work);
+
+        Node finalNode = work.get(component);
+
+        museum.setFinalNode(finalNode);
+
+        for(Node node : work){
+            Log.e("제거하기전",node.toString());
+        }
+
+        work.remove(component);
+
+        for(Node node : work){
+            Log.e("제거한 후",node.toString());
+        }
+
     }
 
     //노드가 가는 경로가 잘 가고 있는지 체크하기
@@ -61,7 +91,7 @@ public class Navigation {
         }
     }
 
-    //최소의 F값 찾기
+    //배열에서 최소의 F 값을 찾아 그 요소 성분을 반환
     public  int compare_Minimum(int[] means_transportation){
         int find_Minimum = means_transportation[0];
         for(int i=1;i<means_transportation.length;i++){
@@ -105,8 +135,8 @@ public class Navigation {
             return current_Node;
         }
     }
-    //목적지에 대한 노드 얻기
 
+    //
     public String get_Device_bearing(double bearing){
         if(bearing >= MapInfo.up_bearing -45 && bearing <= MapInfo.up_bearing + 45){
             return "앞";
@@ -121,6 +151,47 @@ public class Navigation {
             return "오른쪽";
         }
     }
+
+    //위쪽 방향 디바이스랑 비교해서 참,거짓으로 반환
+    public boolean check_down_bearing(double bearing){
+        if(bearing >= MapInfo.down_bearing -45 && bearing <= MapInfo.down_bearing + 45){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    //위쪽 방향 디바이스랑 비교해서 참,거짓으로 반환
+    public boolean check_right_bearing(double bearing){
+        if(bearing >= MapInfo.up_bearing -45 && bearing <= MapInfo.up_bearing + 45){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    //위쪽 방향 디바이스랑 비교해서 참,거짓으로 반환
+    public boolean check_left_bearing(double bearing){
+        if(bearing >= MapInfo.up_bearing -45 && bearing <= MapInfo.up_bearing + 45){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    //위쪽 방향 디바이스랑 비교해서 참,거짓으로 반환
+    public boolean check_up_bearing(double bearing){
+        if(bearing >= MapInfo.up_bearing -45 && bearing <= MapInfo.up_bearing + 45){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
 
     public void Navi_Path(){
         int i=0;
@@ -162,10 +233,7 @@ public class Navigation {
                 navi_text = "이동수단";
             }
 
-
             navi_text_List.add(navi_text);
-            Log.e("냥","");
-            Log.e("숭구리당당",navi_text);
         }
     }
 
@@ -182,7 +250,7 @@ public class Navigation {
         int count = 1 ;
 
         int i=1;
-        while((String)navi_text_List.get(i)== current_text){
+        while((String)navi_text_List.get(i)== current_text && i != navi_text_List.size()-1){
             i++;
             count++;
         }

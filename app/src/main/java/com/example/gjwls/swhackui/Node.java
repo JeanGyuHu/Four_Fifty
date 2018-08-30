@@ -1,4 +1,4 @@
-package a2018_hackathon.navigation;
+package com.example.gjwls.swhackui;
 
 public class Node {
 

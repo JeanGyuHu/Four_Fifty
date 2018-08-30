@@ -1,4 +1,6 @@
-package a2018_hackathon.navigation;
+package com.example.gjwls.swhackui;
+
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -202,6 +204,9 @@ public class AStar {
         for(Node node : temp){
             check += node.getF();
         }
+        //열린리스트,닫힌리스트 초기화 해줌으로써 경로 찾기 재사용 가능하게 하기
+        openList.clear();
+        closedList.clear();
         return check;
     }
 
