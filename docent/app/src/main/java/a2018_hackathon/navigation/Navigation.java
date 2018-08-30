@@ -37,6 +37,12 @@ public class Navigation {
         }
     }
 
+    //근접한 작품
+    public void compare_close_Work(){
+        Extract_Work extract_work = new Extract_Work();
+
+    }
+
     //노드가 가는 경로가 잘 가고 있는지 체크하기
     public boolean user_CheckPosition(List<Node> path,int user_row,int user_col){
         boolean check_Position = false;
