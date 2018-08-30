@@ -28,7 +28,7 @@ public class Navigation {
 
         navi_text_List = new ArrayList();
 
-        museum = new AStar(7,7,initialNode,finalNode);
+        museum = new AStar(MapInfo.map_rows,MapInfo.map_cols,initialNode,finalNode);
         museum.setInformations(MapInfo.museum);
 
         path = museum.findPath();
@@ -164,8 +164,6 @@ public class Navigation {
 
 
             navi_text_List.add(navi_text);
-            Log.e("냥","");
-            Log.e("숭구리당당",navi_text);
         }
     }
 
@@ -182,7 +180,7 @@ public class Navigation {
         int count = 1 ;
 
         int i=1;
-        while((String)navi_text_List.get(i)== current_text){
+        while((String)navi_text_List.get(i)== current_text && i != navi_text_List.size()-1){
             i++;
             count++;
         }
