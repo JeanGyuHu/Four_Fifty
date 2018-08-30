@@ -25,8 +25,8 @@ public class Navigation {
 
     List<Node> work;
     public Navigation() {
-        initialNode = new Node(6,0);
-        finalNode = new Node(6,6);
+        initialNode = new Node(0,0);
+        finalNode = new Node(1,9);
 
         navi_text_List = new ArrayList();
         work = null;
@@ -38,6 +38,7 @@ public class Navigation {
 
         //확인용으로 해놓은 path
         path = museum.findPath();
+
     }
 
     //가까운 작품
@@ -55,15 +56,7 @@ public class Navigation {
 
         museum.setFinalNode(finalNode);
 
-        for(Node node : work){
-            Log.e("제거하기전",node.toString());
-        }
-
         work.remove(component);
-
-        for(Node node : work){
-            Log.e("제거한 후",node.toString());
-        }
 
     }
 

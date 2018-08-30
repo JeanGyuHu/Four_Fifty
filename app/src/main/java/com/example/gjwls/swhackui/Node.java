@@ -9,10 +9,6 @@ public class Node {
     private int row;
     private int col;
 
-    private int floor;
-
-    //private boolean isBlock;
-
     //지하철역에 대한 정보
     private int inforamtion;
 
@@ -127,14 +123,6 @@ public class Node {
 
     public void setCol(int col) {
         this.col = col;
-    }
-
-    public int getFloor(){
-        return floor;
-    }
-
-    public void setFloor(int floor){
-        this.floor = floor;
     }
 
     public boolean IsBlock() {
